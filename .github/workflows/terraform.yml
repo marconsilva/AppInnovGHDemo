@@ -1,0 +1,45 @@
+name: Terraform Plan and Apply
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/**'  # Adjust the path to your Terraform files if necessary
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_EE215FBC55D74CCEBA4CED6CB15FFD51 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0D97FE7CA2294930B561DEDE1DA56DC8 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DEB93DDF0B4A41EE98F030D446988EF7 }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 4.2.0  # Specify the Terraform version you want to use
+
+    - name: Terraform Init
+      run: terraform init
+      working-directory: infra  # Adjust the working directory if necessary
+
+    - name: Terraform Plan
+      run: terraform plan -out=tfplan
+      working-directory: infra  # Adjust the working directory if necessary
+
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main'
+      run: terraform apply -auto-approve tfplan
+      working-directory: infra  # Adjust the working directory if necessary
+
+    - name: Post Apply
+      run: terraform output
+      working-directory: infra  # Adjust the working directory if necessary
